@@ -91,7 +91,7 @@ for FASTQ in "$INPUT_DIR"/*.fastq.gz; do
   samtools index "${SAMPLE}_tmp.bam"
 
   bcftools mpileup -Ou -A -B -Q 13 -a FORMAT/AD,FORMAT/DP -f "$REF" -T "$TARGETS" -r "$Y_NAME" "${SAMPLE}_tmp.bam" |
-    bcftools call -m -A -Ov -o "$VCF_OUT"
+    bcftools call -m -f GQ -A -Ov -o "$VCF_OUT"
 
   rm -f "${SAMPLE}_tmp.fq.gz" "${SAMPLE}_tmp.bam" "${SAMPLE}_tmp.bam.bai" "${SAMPLE}_f.log"
 done

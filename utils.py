@@ -46,6 +46,7 @@ def get_vcf_calls(vcf_path):
                 continue
 
             pos = cols[1]
+            ref_base = cols[3]
             alts = cols[4].split(',')
             fmt_keys = cols[8].split(':')
             sample_vals = cols[9].split(':')
@@ -54,16 +55,23 @@ def get_vcf_calls(vcf_path):
             if 'AD' in fmt_dict and fmt_dict['AD'] != '.':
                 ad_values = fmt_dict['AD'].split(',')
                 try:
-                    ref_count = int(ad_values[0])
+                    total_depth = sum(int(x) for x in ad_values if x != '.')
+
+                    if pos not in calls:
+                        calls[pos] = {}
+
+                    calls[pos][ref_base] = {
+                        'cnt': int(ad_values[0]),
+                        'tot': total_depth
+                    }
+
                     for i, alt_base in enumerate(alts):
+                        if alt_base == '*': continue
                         alt_idx = i + 1
                         if alt_idx < len(ad_values):
-                            alt_count = int(ad_values[alt_idx])
-                            if pos not in calls:
-                                calls[pos] = {}
                             calls[pos][alt_base] = {
-                                'cnt': alt_count,
-                                'tot': ref_count + alt_count
+                                'cnt': int(ad_values[alt_idx]),
+                                'tot': total_depth
                             }
                 except (ValueError, IndexError):
                     continue
