@@ -66,7 +66,8 @@ def get_vcf_calls(vcf_path):
                     }
 
                     for i, alt_base in enumerate(alts):
-                        if alt_base == '*': continue
+                        if alt_base == '*':
+                            continue
                         alt_idx = i + 1
                         if alt_idx < len(ad_values):
                             calls[pos][alt_base] = {
