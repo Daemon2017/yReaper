@@ -11,6 +11,7 @@ fi
 REF="hg38.fa"
 INPUT_DIR="./input"
 OUTPUT_DIR="./output"
+RESULTS_DIR="./results"
 TARGETS="targets.tsv"
 REF_URL="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/latest/hg38.fa.gz"
 TREE_URL="https://www.familytreedna.com/public/y-dna-haplotree/get"
@@ -21,6 +22,9 @@ if [ ! -d "$INPUT_DIR" ]; then
 fi
 if [ ! -d "$OUTPUT_DIR" ]; then
   mkdir -p "$OUTPUT_DIR"
+fi
+if [ ! -d "$RESULTS_DIR" ]; then
+  mkdir -p "$RESULTS_DIR"
 fi
 
 for pkg in python3 bwa samtools bcftools wget gunzip fastp; do
@@ -64,7 +68,9 @@ shopt -s nullglob
 for FASTQ in "$INPUT_DIR"/*.fastq.gz; do
   SAMPLE=$(basename "${FASTQ%.fastq.gz}")
   VCF_OUT="$OUTPUT_DIR/${SAMPLE}_Y.vcf"
-  if [ -f "$VCF_OUT" ]; then
+  REPORT_FILE="./results/${SAMPLE}_report.txt"
+  if [ -f "$REPORT_FILE" ]; then
+    echo "Пропуск: Отчет для $SAMPLE уже существует."
     continue
   fi
 

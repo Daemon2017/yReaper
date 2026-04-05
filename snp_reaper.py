@@ -18,9 +18,6 @@ if __name__ == "__main__":
         print(f"Ошибка: {JSON_PATH} не найден!")
         sys.exit(1)
 
-    if not os.path.exists(RESULTS_DIR):
-        os.makedirs(RESULTS_DIR)
-
     with open(JSON_PATH, 'r', encoding='utf-8') as f:
         try:
             tree_data = json.load(f)
