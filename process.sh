@@ -70,32 +70,32 @@ for FASTQ in "$INPUT_DIR"/*.fastq.gz; do
 
   echo "Обработка образца: $SAMPLE"
 
-  if ! fastp -i "$FASTQ" -o "${SAMPLE}_tmp.fq.gz" \
+  if ! fastp -i "$FASTQ" -o "${OUTPUT_DIR}/${SAMPLE}_tmp.fq.gz" \
     --thread "$THREADS" \
     --length_required 25 \
     --trim_poly_g \
-    --json /dev/null --html /dev/null 2>"${SAMPLE}_f.log"; then
+    --json /dev/null --html /dev/null 2>"${OUTPUT_DIR}/${SAMPLE}_f.log"; then
     continue
   fi
 
-  if [ ! -s "${SAMPLE}_tmp.fq.gz" ]; then
-    rm -f "${SAMPLE}_tmp.fq.gz" "${SAMPLE}_f.log"
+  if [ ! -s "${OUTPUT_DIR}/${SAMPLE}_tmp.fq.gz" ]; then
+    rm -f "${OUTPUT_DIR}/${SAMPLE}_tmp.fq.gz" "${OUTPUT_DIR}/${SAMPLE}_f.log"
     continue
   fi
 
-  bwa mem -t "$THREADS" -k 17 -T 20 -M "$REF" "${SAMPLE}_tmp.fq.gz" |
+  bwa mem -t "$THREADS" -k 17 -T 20 -M "$REF" "${OUTPUT_DIR}/${SAMPLE}_tmp.fq.gz" |
     samtools view -@ "$THREADS" -u -h -L <(echo -e "$Y_NAME\t0\t$Y_MAX") - |
     samtools sort -@ "$THREADS" -m "$MEM_SORT" - |
-    samtools markdup -@ "$THREADS" -r - "${SAMPLE}_tmp.bam"
+    samtools markdup -@ "$THREADS" -r - "${OUTPUT_DIR}/${SAMPLE}_tmp.bam"
 
-  samtools index "${SAMPLE}_tmp.bam"
+  samtools index "${OUTPUT_DIR}/${SAMPLE}_tmp.bam"
 
-  bcftools mpileup -Ou -A -B -Q 13 -a FORMAT/AD,FORMAT/DP -f "$REF" -T "$TARGETS" -r "$Y_NAME" "${SAMPLE}_tmp.bam" |
+  bcftools mpileup -Ou -A -B -Q 13 -a FORMAT/AD,FORMAT/DP -f "$REF" -T "$TARGETS" -r "$Y_NAME" "${OUTPUT_DIR}/${SAMPLE}_tmp.bam" |
     bcftools call -m -f GQ -A -Ov -o "$VCF_OUT"
 
-  rm -f "${SAMPLE}_tmp.fq.gz" "${SAMPLE}_tmp.bam" "${SAMPLE}_tmp.bam.bai" "${SAMPLE}_f.log"
-done
+  if [ -f "snp_reaper.py" ] && [ -f "$VCF_OUT" ]; then
+    python3 snp_reaper.py "$VCF_OUT"
+  fi
 
-if [ -f "reaper.py" ]; then
-  python3 reaper.py
-fi
+  rm -f "${OUTPUT_DIR}/${SAMPLE}_tmp.fq.gz" "${OUTPUT_DIR}/${SAMPLE}_tmp.bam" "${OUTPUT_DIR}/${SAMPLE}_tmp.bam.bai" "${OUTPUT_DIR}/${SAMPLE}_f.log" "$VCF_OUT"
+done
